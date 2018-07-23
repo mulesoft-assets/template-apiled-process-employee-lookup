@@ -150,7 +150,7 @@ payload ++ {
 				<ee:transform doc:name="Error response" doc:id="a0ca3ae1-305c-45e4-b886-f714e8ede421" >
 					<ee:message >
 						<ee:set-payload ><![CDATA[%dw 2.0
-output application/java
+output application/json
 ---
 {
 	message: "Resource not found"
