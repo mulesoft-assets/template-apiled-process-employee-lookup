@@ -1,5 +1,5 @@
 
-# Anypoint Template: API Led Connectivity Process Emmployee Lookup
+# Anypoint Template: API Led Connectivity Process Employee Lookup
 
 + [License Agreement](#licenseagreement)
 + [Use Case](#usecase)
