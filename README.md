@@ -1,5 +1,5 @@
 
-# template: API Led Connectivity Process Emmployee Lookup
+# Anypoint Template: API Led Connectivity Process Emmployee Lookup
 
 + [License Agreement](#licenseagreement)
 + [Use Case](#usecase)
@@ -47,7 +47,7 @@ First thing to know if you are a newcomer to Mule is where to get the tools.
 + You can download Mule ESB from this [Location](http://www.mulesoft.com/platform/soa/mule-esb-open-source-esb)
 
 
-### Importing an template into Studio
+### Importing a template into Studio
 Mule Studio offers several ways to import a project into the workspace, for instance:
 
 + Anypoint Studio generated Deployable Archive (.jar)
