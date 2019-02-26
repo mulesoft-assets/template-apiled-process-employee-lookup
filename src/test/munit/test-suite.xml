@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit"
+	xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd 
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<munit:config name="test-suite.xml" />
+
+	<configuration-properties doc:name="Configuration properties"
+		doc:id="f7c199f4-ddc0-4d59-af82-053f85a9f368" file="mule.test.properties" />
+
+	<http:request-config name="HTTP_Request_configuration"
+		doc:name="HTTP Request configuration" doc:id="ae3920cf-5786-4a9b-b92f-bad390a7abdd"
+		basePath="/api">
+		<http:request-connection host="${api.domain}"
+			port="${http.port}" />
+	</http:request-config>
+	<munit:test name="POST_GET_testFlow" description="MUnit Test"
+		doc:id="823ccdc7-52f4-456d-ba42-251fd1134e45">
+		<munit:enable-flow-sources>
+			<munit:enable-flow-source value="api-main" />
+			<munit:enable-flow-source value="get:\employees\(id):api-config" />
+			<munit:enable-flow-source value="post:\employees:application\json:api-config" />
+		</munit:enable-flow-sources>
+		<munit:execution >
+			<ee:transform doc:name="Prepare test data" doc:id="ac60584e-4121-4dd4-af71-810cb538f73b" >
+				<ee:message >
+				</ee:message>
+				<ee:variables >
+					<ee:set-variable variableName="testData" ><![CDATA[%dw 2.0
+output application/json
+var uniqueId=uuid()
+---
+{
+  "sfdcId":  "sfdc_" ++ uniqueId,
+  "netsuiteId": "nets_" ++ uniqueId,
+  "workdayId": "wday_" ++ uniqueId
+}]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+			<http:request method="POST" doc:name="POST request with test data" doc:id="ae0e2af9-253a-4414-af12-084601c90c6f" config-ref="HTTP_Request_configuration" path="/employees">
+				<http:body ><![CDATA[#[vars.testData]]]></http:body>
+			</http:request>
+			<ee:transform doc:name="Store data from POST call" doc:id="1ffefe41-f66a-4568-b397-81e1873b1978" >
+				<ee:message >
+				</ee:message>
+				<ee:variables >
+					<ee:set-variable variableName="POSTemployeesRetVal" ><![CDATA[%dw 2.0
+output application/java
+---
+{
+	"payload": payload,
+	"statusCode": attributes.statusCode
+}]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+			<http:request method="GET" doc:name="GET request to retrieve data" doc:id="5e27af9c-8b73-4b34-9d9f-24432b357931" path="/employees/{id}" config-ref="HTTP_Request_configuration">
+				<http:uri-params ><![CDATA[#[output application/java
+---
+{
+	"id" : vars.POSTemployeesRetVal.payload.id
+}]]]></http:uri-params>
+			</http:request>
+			<ee:transform doc:name="Store data from GET call" doc:id="fa92d1fb-73e3-4004-b398-83de7de5fd66" >
+				<ee:message >
+				</ee:message>
+				<ee:variables >
+					<ee:set-variable variableName="GETemployeesByIdRetVal" ><![CDATA[%dw 2.0
+output application/java
+---
+{
+	"payload": payload,
+	"statusCode": attributes.statusCode
+}]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-that doc:name="Assert that POST status code is 201" doc:id="c4e5276a-ceae-45f7-a6f2-7ee3b4a0f91c" expression="#[vars.POSTemployeesRetVal.statusCode]" is="#[MunitTools::equalTo(201)]" message="POST status code should be 201"/>
+			<munit-tools:assert-that doc:name="Assert that GET status code is 200" doc:id="afd819bd-7f9c-495f-a359-2902918eeeb8" expression="#[vars.GETemployeesByIdRetVal.statusCode]" is="#[MunitTools::equalTo(200)]" message="GET status code should be 200" />
+			<munit-tools:assert-that doc:name="Assert that inserted data is correct" doc:id="ac9e3639-247d-4e75-99f2-5b92e6e2edae" expression="#[vars.GETemployeesByIdRetVal.payload.sfdcId]" is="#[MunitTools::equalTo(vars.testData.sfdcId)]" message="Inserted data is not correct" />
+		</munit:validation>
+	</munit:test>
+	<munit:test name="GET_testFlow" description="MUnit Test" doc:id="fd30dec2-9a15-4c22-bf80-dcc1453f5a57">
+		<munit:enable-flow-sources >
+			<munit:enable-flow-source value="api-main" />
+			<munit:enable-flow-source value="get:\employees\(id):api-config" />
+		</munit:enable-flow-sources>
+		<munit:execution >
+			<http:request method="GET" doc:name="GET request data, expecting 404 code" doc:id="cccd5dd2-359d-41fa-9942-6e1b4975975c" config-ref="HTTP_Request_configuration" path="/employees/{id}">
+				<http:uri-params ><![CDATA[#[output application/java
+---
+{
+	"id" : uuid()
+}]]]></http:uri-params>
+				<http:response-validator >
+					<http:success-status-code-validator values="404" />
+				</http:response-validator>
+			</http:request>
+			<ee:transform doc:name="Store data from GET call" doc:id="0c6a2a92-5b93-4237-9488-bfeb59323ab5" >
+				<ee:message />
+				<ee:variables >
+					<ee:set-variable variableName="GETemployeesByIdRetVal" ><![CDATA[%dw 2.0
+output application/java
+---
+{
+	"payload": payload,
+	"statusCode": attributes.statusCode
+}]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-that doc:name="Assert that GET status code is 404" doc:id="7c848c8c-151a-45dd-9a74-c064d44e7d2a" expression="#[vars.GETemployeesByIdRetVal.statusCode]" is="#[MunitTools::equalTo(404)]" message="GET status code should be 404" />
+		</munit:validation>
+	</munit:test>	
+</mule>
