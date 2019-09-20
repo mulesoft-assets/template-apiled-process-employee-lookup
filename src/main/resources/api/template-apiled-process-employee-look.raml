@@ -1,30 +1,28 @@
 #%RAML 1.0
-title: Process API
-version: v1.0
+title: Employee Lookup Process API
+version: v2.0
+baseUri: http://localhost:8081/api
+
 
 types:
-  EmployeeMapping: !include dataTypes/EmployeeMapping.raml
-  ErrorResponse: !include dataTypes/ErrorResponse.raml
-  SuccessResponse: !include dataTypes/SuccessResponse.raml
-
-traits:
-  employeeSearch: !include traits/trait-collection.raml
+  employeeMapping: !include dataTypes/EmployeeMapping.raml
+  errorResponse: !include dataTypes/ErrorResponse.raml
+  successResponse: !include dataTypes/SuccessResponse.raml
 
 /employees:
-  displayName: Create the employee mapping
   post:
+    displayName: Create employee mapping
     description: |
       Create the employee mapping
     body: 
       application/json:
-        type: EmployeeMapping
-        example: !include examples/post_employees_example.json
+        type: employeeMapping
+        example: !include examples/post_employees_example.yaml
     responses:
       201:
-        description: Created
         body: 
           application/json:
-            type: SuccessResponse
+            type: successResponse
             example: |
                 {
                   "id": "asdasfsa89f7s87faas87f98as7f98sa7"
@@ -32,25 +30,25 @@ traits:
 
         
   /{id}:
-    displayName: Get Employee mapping with specific ID
     uriParameters:
       id:
         type: string
         example: 20a5ea46-a4ee-4542-93f4-9040a4ec078b
         description: Represents the employee unique id in form of UUID
     get:
+      displayName: Get employee mapping by id
       description: Get Employee mapping by ID
       responses:
         200:        
           body:
             application/json:
-              type: EmployeeMapping
-              example: !include examples/get_employee_example.json
+              type: employeeMapping
+              example: !include examples/get_employee_example.yaml
               
         404:
           body:
             application/json:
-              type: ErrorResponse
+              type: errorResponse
               example: |
                 {
                   "message": "Resource not found"
