@@ -84,3 +84,4 @@ In order to use this Mule template you need to configure properties (Credentials
 **Common Configuration**
 
 + http.port `9090`
++ api.domain `localhost`
